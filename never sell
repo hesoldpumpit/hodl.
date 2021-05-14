@@ -1,0 +1,58 @@
+import plotly.graph_objects as go
+import numpy as np
+import pandas as pd
+
+#numpy not needed
+# go to https://www.quandl.com/data/BCHAIN/MKPRU-Bitcoin-Market-Price-USD make an account (throw away or real email
+# up to u) and save the csv as btcdaily.csv to the same folder you save this code.
+
+#data processing
+df = pd.read_csv('btcdaily.csv')
+df['Date'] = pd.to_datetime(df['Date'])
+
+latest_price = df['Value'].iloc[0]
+
+df['profit'] = df['Value']
+df['profit'].where(df['profit'] < latest_price, None, inplace=True)
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(
+    x=df['Date'],
+    y=df['Value'],
+    name='Loss',
+    line=dict(color='red')
+))
+
+fig.add_trace(go.Scatter(
+    x=df['Date'],
+    y=df['profit'],
+    name='Profit',
+    line=dict(color='green')
+))
+
+total_days = len(df)
+total_profitable_days = len(df[df['Value'] < latest_price])
+percentage_profitable = round(total_profitable_days/total_days*100, 2)
+
+fig.add_annotation(text=f"Total Days: {total_days}",
+                   xref='paper', yref='paper',
+                   x=0.05, y=0.9, showarrow=False,
+                   font=dict(size=20))
+
+fig.add_annotation(text=f"Total Profitable Days: {total_profitable_days}",
+                   xref='paper', yref='paper',
+                   x=0.05, y=0.86, showarrow=False,
+                   font=dict(size=20))
+
+fig.add_annotation(text=f"Profitable Days %: {percentage_profitable}",
+                   xref='paper', yref='paper',
+                   x=0.05, y=0.82, showarrow=False,
+                   font=dict(size=20))
+
+
+fig.update_layout(template='plotly_dark')
+fig.update_yaxes(type='log', showgrid=False)
+fig.update_xaxes(showgrid=False)
+
+fig.show()
